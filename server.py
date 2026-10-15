@@ -18,6 +18,8 @@ PORT = 8000
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "sabzimandi.db")
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
+PUBLIC_ERROR = "Something went wrong. Please try again."
+ALLOWED_LOGIN_ROLES = {"customer", "vendor", "transporter"}
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
@@ -572,7 +574,7 @@ class SabziMandiRequestHandler(SimpleHTTPRequestHandler):
 
         except Exception as e:
             print("API GET Error:", e)
-            self.send_json({"error": str(e)}, 500)
+            self.send_json({"error": PUBLIC_ERROR}, 500)
         finally:
             conn.close()
 
@@ -591,23 +593,11 @@ class SabziMandiRequestHandler(SimpleHTTPRequestHandler):
                 password = body.get("password", "").strip()
                 username = body.get("username", "").strip()
 
-                if role == "admin":
-                    if (username.lower() in ["admin", "aditya"] and password in ["admin123", "mandi2026", "aditya123"]) or password == "admin123":
-                        self.send_json({
-                            "success": True,
-                            "user": {
-                                "role": "admin",
-                                "name": "Aditya Sharma (Master Admin)",
-                                "username": username or "admin",
-                                "permissions": "FULL_SUPERUSER_ACCESS"
-                            },
-                            "message": "Authenticated as Master Admin"
-                        })
-                    else:
-                        self.send_json({"error": "Invalid Admin credentials (Use username: 'admin', password: 'admin123')"}, 401)
+                if role not in ALLOWED_LOGIN_ROLES:
+                    self.send_json({"error": "Please choose Customer, Transporter, or Vendor / Farmer."}, 400)
                     return
 
-                elif role == "vendor":
+                if role == "vendor":
                     cursor.execute("SELECT * FROM Vendors WHERE phone_number = ? OR vendor_name LIKE ?", (phone, f"%{phone}%"))
                     v = cursor.fetchone()
                     if v:
@@ -854,30 +844,7 @@ class SabziMandiRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json({"success": True, "batch_id": batch_id, "message": "New society delivery tempo assigned!"})
 
             elif path == "/api/sql":
-                # Admin: Execute live SQL query
-                query_str = body.get("query", "").strip()
-                if not query_str:
-                    self.send_json({"error": "Empty SQL query"}, 400)
-                    return
-
-                # Security check: disallow dangerous OS calls, allow all standard DDL/DML/DQL
-                cursor.execute(query_str)
-                if query_str.lower().startswith("select"):
-                    columns = [d[0] for d in cursor.description] if cursor.description else []
-                    rows = [list(r) for r in cursor.fetchall()]
-                    self.send_json({
-                        "type": "SELECT",
-                        "columns": columns,
-                        "rows": rows,
-                        "count": len(rows)
-                    })
-                else:
-                    conn.commit()
-                    self.send_json({
-                        "type": "MUTATION",
-                        "affected_rows": cursor.rowcount,
-                        "message": f"Query executed successfully. {cursor.rowcount} row(s) affected."
-                    })
+                self.send_json({"error": "This action is not available."}, 403)
 
             elif path == "/api/reset-db":
                 # Reset database to seed
@@ -899,7 +866,7 @@ class SabziMandiRequestHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             conn.rollback()
             print("API POST Error:", e)
-            self.send_json({"error": str(e)}, 500)
+            self.send_json({"error": PUBLIC_ERROR}, 500)
         finally:
             conn.close()
 
@@ -1001,7 +968,7 @@ class SabziMandiRequestHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             conn.rollback()
             print("API PUT Error:", e)
-            self.send_json({"error": str(e)}, 500)
+            self.send_json({"error": PUBLIC_ERROR}, 500)
         finally:
             conn.close()
 
@@ -1022,7 +989,8 @@ class SabziMandiRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json({"error": "Not Found"}, 404)
         except Exception as e:
             conn.rollback()
-            self.send_json({"error": str(e)}, 500)
+            print("API DELETE Error:", e)
+            self.send_json({"error": PUBLIC_ERROR}, 500)
         finally:
             conn.close()
 
@@ -1047,7 +1015,7 @@ class SabziMandiRequestHandler(SimpleHTTPRequestHandler):
             return "🍲 **Chef's Recommendation**: Try making *Aloo Palak with freshly chopped Garlic & Ginger* or a vibrant *Mixed Veg Kadai* with fresh Shimla Mirch, Cauliflower, and Sweet Peas. Add fresh Coriander at the end for pure aroma!"
 
         if any(w in text for w in ["admin", "vendor", "transporter", "login", "role"]):
-            return "🔐 **Role Logins**: Switch roles anytime using the top navigation bar! We have dedicated dashboards for **Customers**, **Mandi Vendors & Farmers**, **Mini-Truck Transporters**, and full **Admin Access** (where you can run SQL queries, add products, and manage batches)."
+            return "🔐 **Role Logins**: You can sign in as a **Customer**, **Vendor / Farmer**, or **Transporter**. Each role opens its own dashboard after authentication."
 
         return "Namaste! 🙏 I am **Dost**, your Sabzi Mandi Assistant. Ask me anything about today's fresh mandi prices, tomorrow's mini-truck colony batch timings, tracking your order, or direct farmer sourcing!"
 
@@ -1058,7 +1026,7 @@ def run():
     print("\n==================================================================")
     print("SabziMandi Pro - Batched Quick Commerce Platform Online!")
     print(f"Server running on: http://localhost:{PORT}")
-    print("Admin SQL Console & 3-Role Portals enabled")
+    print("Public portals: Customer, Vendor/Farmer, Transporter")
     print("==================================================================\n")
     try:
         httpd.serve_forever()

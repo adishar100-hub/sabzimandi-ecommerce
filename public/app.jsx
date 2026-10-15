@@ -55,29 +55,306 @@ const SOCIETIES = [
   { name: "Hiranandani Gardens, Powai", pincode: "400076", batch_id: 1, driver: "Ramesh Kumar", truck: "MH-02-AB-1234" }
 ];
 
+const PUBLIC_ROLES = ['customer', 'vendor', 'transporter'];
+
+function sanitizeClientError(message) {
+  if (!message || typeof message !== 'string') {
+    return 'Something went wrong. Please try again.';
+  }
+  if (/sql|sqlite|syntax|commit|traceback|exception|operationalerror|database|pragma|select |insert |update |delete from|no such table/i.test(message)) {
+    return 'Something went wrong. Please try again.';
+  }
+  return message;
+}
+
+function FloatingProduceBackdrop() {
+  const items = [
+    { cls: 'f1 lg', emoji: '🍅' },
+    { cls: 'f2', emoji: '🥕' },
+    { cls: 'f3 sm', emoji: '🍋' },
+    { cls: 'f4 lg', emoji: '🥦' },
+    { cls: 'f5', emoji: '🍇' },
+    { cls: 'f6 sm', emoji: '🧅' },
+    { cls: 'f7', emoji: '🥭' },
+    { cls: 'f8 lg', emoji: '🍏' },
+    { cls: 'f9 sm', emoji: '🌶️' },
+    { cls: 'f10', emoji: '🍆' },
+    { cls: 'f11', emoji: '🍌' },
+    { cls: 'f12 sm', emoji: '🥬' }
+  ];
+  return (
+    <div className="produce-layer" aria-hidden="true">
+      {items.map((item, idx) => (
+        <span key={idx} className={`float-item ${item.cls}`}>{item.emoji}</span>
+      ))}
+    </div>
+  );
+}
+
+function AuthScreen({
+  loginRoleTab,
+  setLoginRoleTab,
+  loginForm,
+  setLoginForm,
+  loginError,
+  handleLoginSubmit,
+  handleDemoLogin,
+  handleRegister
+}) {
+  const roleMeta = {
+    customer: { icon: '🛒', title: 'Customer Login', hint: 'Order mandi-fresh produce for tomorrow’s colony mini-truck.' },
+    vendor: { icon: '🚜', title: 'Vendor / Farmer Login', hint: 'Manage stall stock, rates, and packed crates.' },
+    transporter: { icon: '🚚', title: 'Transporter Login', hint: 'Open your delivery manifest and colony drop list.' },
+    register: { icon: '✨', title: 'Create Account', hint: 'Register as a customer to start ordering.' }
+  };
+  const meta = roleMeta[loginRoleTab] || roleMeta.customer;
+
+  return (
+    <div className="login-stage">
+      <FloatingProduceBackdrop />
+      <div className="login-card">
+        <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl border border-white/70">
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-emerald-600 to-green-500 text-white text-3xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+              🥦
+            </div>
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">
+              SABZI<span className="text-emerald-600">O</span>
+            </h1>
+            <p className="text-xs text-slate-500 font-medium lowercase">from farms to your gate</p>
+            <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-inner">
+              {meta.icon}
+            </div>
+            <h2 className="text-lg font-extrabold text-slate-900">{meta.title}</h2>
+            <p className="text-xs text-slate-500">{meta.hint}</p>
+          </div>
+
+          <div className="flex bg-slate-100 p-1 rounded-2xl gap-1 text-[11px] font-bold">
+            {[
+              { id: 'customer', label: 'Customer', icon: '🛒' },
+              { id: 'vendor', label: 'Vendor / Farmer', icon: '🚜' },
+              { id: 'transporter', label: 'Transporter', icon: '🚚' },
+              { id: 'register', label: 'New User', icon: '✨' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setLoginRoleTab(tab.id)}
+                className={`flex-1 py-2 rounded-xl text-center transition flex flex-col sm:flex-row items-center justify-center gap-1 ${
+                  loginRoleTab === tab.id
+                    ? 'bg-white text-emerald-800 shadow-sm font-extrabold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {loginError && (
+            <div className="bg-red-50 text-red-700 border border-red-200 p-3 rounded-2xl text-xs font-semibold flex items-center gap-2">
+              <span>⚠️</span>
+              <span>{sanitizeClientError(loginError)}</span>
+            </div>
+          )}
+
+          {loginRoleTab === 'customer' && (
+            <form onSubmit={handleLoginSubmit} className="space-y-3.5">
+              <div>
+                <label className="text-xs font-bold text-slate-700">Customer Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Rahul Sharma"
+                  value={loginForm.name}
+                  onChange={(e) => setLoginForm({ ...loginForm, name: e.target.value })}
+                  className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700">Mobile Phone Number</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="e.g. 9998887776"
+                  value={loginForm.phone}
+                  onChange={(e) => setLoginForm({ ...loginForm, phone: e.target.value })}
+                  className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700">Password</label>
+                <input
+                  type="password"
+                  placeholder="Enter your password"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                  className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700">Delivery Colony / Society</label>
+                <select
+                  value={loginForm.society}
+                  onChange={(e) => setLoginForm({ ...loginForm, society: e.target.value })}
+                  className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  {SOCIETIES.map(s => (
+                    <option key={s.name} value={s.name}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+              <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-md transition">
+                Sign In as Customer
+              </button>
+            </form>
+          )}
+
+          {loginRoleTab === 'vendor' && (
+            <form onSubmit={handleLoginSubmit} className="space-y-3.5">
+              <div>
+                <label className="text-xs font-bold text-slate-700">Vendor Phone Number</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="e.g. 9876543211"
+                  value={loginForm.phone}
+                  onChange={(e) => setLoginForm({ ...loginForm, phone: e.target.value })}
+                  className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700">Select APMC Mandi</label>
+                <select className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                  <option>Vashi APMC Mega Mandi (Sector 19)</option>
+                  <option>Dadar Wholesale Flower & Sabzi Market</option>
+                  <option>Andheri Station Road Sabzi Mandi</option>
+                </select>
+              </div>
+              <button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-md transition">
+                Sign In as Vendor / Farmer
+              </button>
+            </form>
+          )}
+
+          {loginRoleTab === 'transporter' && (
+            <form onSubmit={handleLoginSubmit} className="space-y-3.5">
+              <div>
+                <label className="text-xs font-bold text-slate-700">Driver Phone Number</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="e.g. 9876543210"
+                  value={loginForm.phone}
+                  onChange={(e) => setLoginForm({ ...loginForm, phone: e.target.value })}
+                  className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700">Mini-Truck Number</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. MH-02-AB-1234"
+                  value={loginForm.truck_number}
+                  onChange={(e) => setLoginForm({ ...loginForm, truck_number: e.target.value })}
+                  className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <button type="submit" className="w-full bg-teal-700 hover:bg-teal-800 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-md transition">
+                Sign In as Transporter
+              </button>
+            </form>
+          )}
+
+          {loginRoleTab === 'register' && (
+            <form onSubmit={handleRegister} className="space-y-3.5">
+              <div>
+                <label className="text-xs font-bold text-slate-700">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Rahul Sharma"
+                  value={loginForm.name}
+                  onChange={(e) => setLoginForm({ ...loginForm, name: e.target.value })}
+                  className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700">Mobile Phone Number</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="10-digit mobile number"
+                  value={loginForm.phone}
+                  onChange={(e) => setLoginForm({ ...loginForm, phone: e.target.value })}
+                  className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700">Colony / Society Name</label>
+                <select
+                  value={loginForm.society}
+                  onChange={(e) => setLoginForm({ ...loginForm, society: e.target.value })}
+                  className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  {SOCIETIES.map(s => (
+                    <option key={s.name} value={s.name}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+              <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-md transition">
+                Create Account & Start Ordering
+              </button>
+            </form>
+          )}
+
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold py-3 rounded-xl text-sm shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2"
+          >
+            <span>⚡</span>
+            <span>Demo Login</span>
+          </button>
+          <p className="text-[11px] text-center text-slate-400">
+            Skip credentials and explore as a {loginRoleTab === 'vendor' ? 'Vendor / Farmer' : loginRoleTab === 'transporter' ? 'Transporter' : 'Customer'}.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
-  // Current active role: 'customer' | 'vendor' | 'transporter' | 'admin'
-  const [activeRole, setActiveRole] = useState('customer');
+  // Current active role: 'customer' | 'vendor' | 'transporter'
+  const [activeRole, setActiveRole] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sabzimandi_user');
+      const user = saved ? JSON.parse(saved) : null;
+      return user && PUBLIC_ROLES.includes(user.role) ? user.role : 'customer';
+    } catch (e) {
+      return 'customer';
+    }
+  });
   
   // Authentication State
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('sabzimandi_user');
-      return saved ? JSON.parse(saved) : {
-        role: 'customer',
-        customer_id: 1,
-        name: 'Rahul Sharma',
-        phone: '9998887776',
-        society: 'Shivam Society, Andheri East',
-        address: 'B-402, Shivam Society, Andheri East'
-      };
+      if (!saved) return null;
+      const user = JSON.parse(saved);
+      if (!user || !PUBLIC_ROLES.includes(user.role)) {
+        localStorage.removeItem('sabzimandi_user');
+        return null;
+      }
+      return user;
     } catch(e) {
       return null;
     }
   });
 
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [loginRoleTab, setLoginRoleTab] = useState('customer'); // 'customer' | 'vendor' | 'transporter' | 'admin' | 'register'
+  const [loginRoleTab, setLoginRoleTab] = useState('customer'); // 'customer' | 'vendor' | 'transporter' | 'register'
   const [loginForm, setLoginForm] = useState({
     phone: '',
     password: '',
@@ -112,12 +389,6 @@ function App() {
   ]);
   const [chatInput, setChatInput] = useState("");
   const [orderNotice, setOrderNotice] = useState(null);
-
-  // Admin Studio State
-  const [sqlQuery, setSqlQuery] = useState("SELECT c.full_name AS Customer, v.vendor_name AS Sold_By, p.item_name AS Item, oi.quantity_kg AS Qty, vi.price_per_kg AS Rate_Rs, oi.subtotal AS Item_Total, o.total_amount AS Grand_Total\nFROM Orders o\nJOIN Customers c ON o.customer_id = c.customer_id\nJOIN Order_Items oi ON o.order_id = oi.order_id\nJOIN Products p ON oi.product_id = p.product_id\nJOIN Vendor_Inventory vi ON p.product_id = vi.product_id AND o.vendor_id = vi.vendor_id\nJOIN Vendors v ON o.vendor_id = v.vendor_id\nLIMIT 10;");
-  const [sqlResult, setSqlResult] = useState(null);
-  const [sqlError, setSqlError] = useState(null);
-  const [isExecutingSql, setIsExecutingSql] = useState(false);
 
   // Load Data from API if available
   useEffect(() => {
@@ -202,16 +473,29 @@ function App() {
     }
   };
 
+  const completeLogin = (user) => {
+    if (!user || !PUBLIC_ROLES.includes(user.role)) {
+      setLoginError('Please choose Customer, Transporter, or Vendor / Farmer.');
+      return;
+    }
+    setCurrentUser(user);
+    localStorage.setItem('sabzimandi_user', JSON.stringify(user));
+    setActiveRole(user.role);
+    setLoginError(null);
+    setLoginSuccessNotice(`Successfully logged in as ${user.name}!`);
+    setTimeout(() => setLoginSuccessNotice(null), 4000);
+  };
+
   // Auth Operations
   const handleLoginSubmit = async (e) => {
     if (e) e.preventDefault();
     setLoginError(null);
 
+    const role = PUBLIC_ROLES.includes(loginRoleTab) ? loginRoleTab : 'customer';
     const payload = {
-      role: loginRoleTab,
+      role,
       phone: loginForm.phone,
       password: loginForm.password,
-      username: loginForm.username,
       name: loginForm.name,
       society: loginForm.society
     };
@@ -225,7 +509,7 @@ function App() {
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        setLoginError(data.error || "Authentication failed");
+        setLoginError(sanitizeClientError(data.error || "Authentication failed"));
         return;
       }
 
@@ -233,28 +517,23 @@ function App() {
       if (loginForm.name && loginForm.name.trim()) {
         user.name = loginForm.name.trim();
       }
-      setCurrentUser(user);
-      localStorage.setItem('sabzimandi_user', JSON.stringify(user));
-      setActiveRole(user.role);
-      setIsLoginModalOpen(false);
-      setLoginSuccessNotice(`Successfully logged in as ${user.name}!`);
-      setTimeout(() => setLoginSuccessNotice(null), 4000);
+      completeLogin(user);
     } catch (err) {
-      // Local fallback for offline mode
-      let fallbackUser = {
-        role: loginRoleTab,
-        name: loginForm.name || (loginRoleTab === 'admin' ? 'Aditya Sharma (Master Admin)' : loginRoleTab === 'vendor' ? 'Raju Fresh Veggies' : loginRoleTab === 'transporter' ? 'Ramesh Kumar (Driver)' : 'Rahul Sharma'),
+      completeLogin({
+        role,
+        customer_id: role === 'customer' ? 1 : undefined,
+        vendor_id: role === 'vendor' ? 1 : undefined,
+        batch_id: role === 'transporter' ? 1 : undefined,
+        name: loginForm.name || (role === 'vendor' ? 'Raju Fresh Veggies' : role === 'transporter' ? 'Ramesh Kumar' : 'Rahul Sharma'),
         phone: loginForm.phone || '9998887776',
-        society: loginForm.society
-      };
-      setCurrentUser(fallbackUser);
-      localStorage.setItem('sabzimandi_user', JSON.stringify(fallbackUser));
-      setActiveRole(loginRoleTab);
-      setIsLoginModalOpen(false);
+        society: loginForm.society,
+        truck_number: loginForm.truck_number
+      });
     }
   };
 
-  const handle1ClickDemoLogin = (roleType) => {
+  const handleDemoLogin = () => {
+    const roleType = PUBLIC_ROLES.includes(loginRoleTab) ? loginRoleTab : 'customer';
     let demoUser = null;
     if (roleType === 'customer') {
       demoUser = {
@@ -283,22 +562,40 @@ function App() {
         truck_number: 'MH-02-AB-1234',
         shift: 'Morning'
       };
-    } else if (roleType === 'admin') {
-      demoUser = {
-        role: 'admin',
-        name: 'Aditya Sharma (Master Admin)',
-        username: 'admin',
-        permissions: 'FULL_SUPERUSER_ACCESS'
-      };
     }
 
     if (demoUser) {
-      setCurrentUser(demoUser);
-      localStorage.setItem('sabzimandi_user', JSON.stringify(demoUser));
-      setActiveRole(demoUser.role);
-      setIsLoginModalOpen(false);
-      setLoginSuccessNotice(`⚡ Logged in as ${demoUser.name} (${demoUser.role.toUpperCase()})`);
+      completeLogin(demoUser);
+      setLoginSuccessNotice(`⚡ Demo login as ${demoUser.name}`);
       setTimeout(() => setLoginSuccessNotice(null), 4000);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setLoginError(null);
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: loginForm.name,
+          phone: loginForm.phone,
+          society: loginForm.society,
+          address: loginForm.society,
+          role: 'customer'
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setLoginError(sanitizeClientError(data.error || 'Could not create account.'));
+        return;
+      }
+      if (data.user) {
+        completeLogin({ ...data.user, role: 'customer' });
+      }
+    } catch (err) {
+      handleDemoLogin();
     }
   };
 
@@ -306,25 +603,23 @@ function App() {
     setCurrentUser(null);
     localStorage.removeItem('sabzimandi_user');
     setActiveRole('customer');
+    setLoginRoleTab('customer');
     setIsUserMenuOpen(false);
-    setLoginSuccessNotice("Logged out. You are now browsing as Guest.");
-    setTimeout(() => setLoginSuccessNotice(null), 3000);
+    setLoginError(null);
   };
 
-  // Guarded role switch
+  // Guarded role switch — never expose Admin on the public UI
   const handleSwitchRoleClick = (targetRole) => {
-    if (targetRole === 'customer') {
-      setActiveRole('customer');
-      return;
-    }
-
+    if (!PUBLIC_ROLES.includes(targetRole)) return;
     if (currentUser?.role === targetRole) {
       setActiveRole(targetRole);
-    } else {
-      setLoginRoleTab(targetRole);
-      setIsLoginModalOpen(true);
-      setLoginError(`Please authenticate as a ${targetRole === 'vendor' ? 'Farmer/Mandi Vendor' : targetRole === 'transporter' ? 'Transporter' : 'Master Admin'} to access this portal.`);
+      return;
     }
+    const labels = { customer: 'Customer', vendor: 'Vendor / Farmer', transporter: 'Transporter' };
+    setLoginRoleTab(targetRole);
+    setCurrentUser(null);
+    localStorage.removeItem('sabzimandi_user');
+    setLoginError(`Please sign in as a ${labels[targetRole]} to continue.`);
   };
 
   // Cart operations
@@ -363,7 +658,6 @@ function App() {
 
     if (!currentUser) {
       setLoginRoleTab('customer');
-      setIsLoginModalOpen(true);
       setLoginError("Please sign in or create an account to place your batched colony order!");
       return;
     }
@@ -410,8 +704,7 @@ function App() {
       setCart([]);
       setIsCartOpen(false);
     } catch (e) {
-      console.error(e);
-      alert("Order placed offline! Total: ₹" + totalCartAmount);
+      alert("Order placed. Total: ₹" + totalCartAmount);
       setCart([]);
       setIsCartOpen(false);
     }
@@ -442,32 +735,6 @@ function App() {
     }
   };
 
-  // Run SQL query in Admin Studio
-  const handleExecuteSql = async (customQuery) => {
-    const queryToRun = customQuery || sqlQuery;
-    setIsExecutingSql(true);
-    setSqlError(null);
-    setSqlResult(null);
-
-    try {
-      const res = await fetch('/api/sql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: queryToRun })
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        setSqlError(data.error || "Query execution failed");
-      } else {
-        setSqlResult(data);
-      }
-    } catch (e) {
-      setSqlError(e.message);
-    } finally {
-      setIsExecutingSql(false);
-    }
-  };
-
   // Filter products
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
@@ -486,6 +753,32 @@ function App() {
       return matchesCategory && matchesSearch;
     });
   }, [products, categoryFilter, searchQuery]);
+
+  if (!currentUser) {
+    return (
+      <>
+        {loginSuccessNotice && (
+          <div className="fixed top-3 right-4 z-50 bg-emerald-700 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-bold">
+            <span>✓</span>
+            <span>{loginSuccessNotice}</span>
+          </div>
+        )}
+        <AuthScreen
+          loginRoleTab={loginRoleTab}
+          setLoginRoleTab={(tab) => {
+            setLoginRoleTab(tab);
+            setLoginError(null);
+          }}
+          loginForm={loginForm}
+          setLoginForm={setLoginForm}
+          loginError={loginError}
+          handleLoginSubmit={handleLoginSubmit}
+          handleDemoLogin={handleDemoLogin}
+          handleRegister={handleRegister}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -603,15 +896,6 @@ function App() {
             >
               <span>🚚</span> <span className="hidden sm:inline">Transporter</span>
             </button>
-
-            <button
-              onClick={() => handleSwitchRoleClick('admin')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                activeRole === 'admin' ? 'bg-slate-900 text-amber-400 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <span>⚙️</span> <span className="hidden sm:inline">Admin</span>
-            </button>
           </div>
 
           {/* Cart Button */}
@@ -646,7 +930,7 @@ function App() {
                   {/* Status pulsing dot & avatar */}
                   <div className="relative">
                     <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-green-500 text-white flex items-center justify-center text-sm font-black shadow-md shadow-emerald-600/30">
-                      {currentUser.role === 'admin' ? '⚙️' : currentUser.role === 'vendor' ? '🚜' : currentUser.role === 'transporter' ? '🚚' : '👤'}
+                      {currentUser.role === 'vendor' ? '🚜' : currentUser.role === 'transporter' ? '🚚' : '👤'}
                     </span>
                     <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-ping"></span>
                     <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
@@ -688,14 +972,17 @@ function App() {
                     <div className="pt-1 space-y-1">
                       <button
                         onClick={() => {
+                          const nextRole = PUBLIC_ROLES.includes(currentUser.role) ? currentUser.role : 'customer';
                           setIsUserMenuOpen(false);
-                          setLoginRoleTab(currentUser.role);
-                          setIsLoginModalOpen(true);
+                          setLoginRoleTab(nextRole);
+                          setCurrentUser(null);
+                          localStorage.removeItem('sabzimandi_user');
+                          setLoginError(null);
                         }}
                         className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 font-bold text-slate-700 flex items-center gap-2 transition"
                       >
                         <span>🔄</span>
-                        <span>Switch Account / Change Name</span>
+                        <span>Switch Account</span>
                       </button>
 
                       <button
@@ -709,434 +996,11 @@ function App() {
                   </div>
                 )}
               </div>
-            ) : (
-              <button
-                onClick={() => {
-                  setLoginRoleTab('customer');
-                  setIsLoginModalOpen(true);
-                }}
-                className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white px-4 py-2 rounded-xl text-xs font-black shadow-md shadow-emerald-600/30 transition hover:scale-105 active:scale-95"
-              >
-                <span>🔐</span>
-                <span>Customer Login</span>
-              </button>
-            )}
+            ) : null}
           </div>
 
         </div>
       </header>
-
-      {/* ========================================================= */}
-      {/* AUTHENTICATION / LOGIN MODAL */}
-      {/* ========================================================= */}
-      {isLoginModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative border border-slate-200 max-h-[90vh] overflow-y-auto">
-            
-            <button 
-              onClick={() => setIsLoginModalOpen(false)}
-              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 font-bold text-lg"
-            >
-              ✕
-            </button>
-
-            {/* Modal Header */}
-            <div className="text-center space-y-1">
-              <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-inner">
-                {loginRoleTab === 'customer' ? '🛒' : loginRoleTab === 'vendor' ? '🚜' : loginRoleTab === 'transporter' ? '🚚' : loginRoleTab === 'admin' ? '⚙️' : '✨'}
-              </div>
-              <h2 className="text-xl font-extrabold text-slate-900">
-                SabziMandi Pro Authentication
-              </h2>
-              <p className="text-xs text-slate-500">
-                Dedicated Logins for Customers, Farmers/Vendors, Transporters & Master Admin
-              </p>
-            </div>
-
-            {/* Role Tabs */}
-            <div className="flex bg-slate-100 p-1 rounded-2xl gap-1 text-[11px] font-bold">
-              {[
-                { id: 'customer', label: 'Customer', icon: '🛒' },
-                { id: 'vendor', label: 'Farmer/Vendor', icon: '🚜' },
-                { id: 'transporter', label: 'Transporter', icon: '🚚' },
-                { id: 'admin', label: 'Admin', icon: '⚙️' },
-                { id: 'register', label: 'New User', icon: '✨' }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setLoginRoleTab(tab.id);
-                    setLoginError(null);
-                  }}
-                  className={`flex-1 py-2 rounded-xl text-center transition flex flex-col sm:flex-row items-center justify-center gap-1 ${
-                    loginRoleTab === tab.id
-                      ? 'bg-white text-emerald-800 shadow-sm font-extrabold'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <span>{tab.icon}</span>
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Error Message */}
-            {loginError && (
-              <div className="bg-red-50 text-red-700 border border-red-200 p-3 rounded-2xl text-xs font-semibold flex items-center gap-2">
-                <span>⚠️</span>
-                <span>{loginError}</span>
-              </div>
-            )}
-
-            {/* 1. CUSTOMER LOGIN TAB */}
-            {loginRoleTab === 'customer' && (
-              <form onSubmit={handleLoginSubmit} className="space-y-3.5">
-                <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl text-xs text-emerald-900 space-y-1">
-                  <div className="font-extrabold flex items-center gap-1">
-                    <span>🛒 Customer Account Login</span>
-                  </div>
-                  <p className="text-[11px] text-emerald-700">
-                    Order fresh veggies & fruits a day prior for tomorrow morning's dedicated mini-truck delivery!
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Customer Name (e.g. XYZ / Rahul Sharma)</label>
-                  <input
-                    type="text"
-                    placeholder="Enter your name (e.g. Rahul Sharma, XYZ)"
-                    value={loginForm.name}
-                    onChange={(e) => setLoginForm({ ...loginForm, name: e.target.value })}
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Mobile Phone Number</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="e.g. 9998887776"
-                    value={loginForm.phone}
-                    onChange={(e) => setLoginForm({ ...loginForm, phone: e.target.value })}
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Password / Security PIN</label>
-                  <input
-                    type="password"
-                    placeholder="Enter password (default: hashed_pwd_123)"
-                    value={loginForm.password}
-                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Select Delivery Colony / Society</label>
-                  <select
-                    value={loginForm.society}
-                    onChange={(e) => setLoginForm({ ...loginForm, society: e.target.value })}
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    {SOCIETIES.map(s => (
-                      <option key={s.name} value={s.name}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="pt-2 space-y-2">
-                  <button
-                    type="submit"
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-md transition"
-                  >
-                    Sign In as Customer
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handle1ClickDemoLogin('customer')}
-                    className="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-extrabold py-2 rounded-xl text-xs transition border border-emerald-300 flex items-center justify-center gap-1.5"
-                  >
-                    <span>⚡ 1-Click Demo Login as Rahul Sharma (Customer)</span>
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* 2. FARMER & VENDOR LOGIN TAB */}
-            {loginRoleTab === 'vendor' && (
-              <form onSubmit={handleLoginSubmit} className="space-y-3.5">
-                <div className="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-xs text-amber-900 space-y-1">
-                  <div className="font-extrabold flex items-center gap-1">
-                    <span>🚜 Mandi Vendor & Farmer Stall Access</span>
-                  </div>
-                  <p className="text-[11px] text-amber-700">
-                    Manage daily mandi stock (kg), live rates (₹/kg), and prepare tomorrow morning's colony crates.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Vendor Phone Number</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="e.g. 9876543211 (Raju Fresh Veggies)"
-                    value={loginForm.phone}
-                    onChange={(e) => setLoginForm({ ...loginForm, phone: e.target.value })}
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Select APMC Mandi</label>
-                  <select
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option>Vashi APMC Mega Mandi (Sector 19)</option>
-                    <option>Dadar Wholesale Flower & Sabzi Market</option>
-                    <option>Andheri Station Road Sabzi Mandi</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Stall / Gala Number</label>
-                  <input
-                    type="text"
-                    defaultValue="Shop No. 12"
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div className="pt-2 space-y-2">
-                  <button
-                    type="submit"
-                    className="w-full bg-amber-600 hover:bg-amber-700 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-md transition"
-                  >
-                    Sign In as Mandi Vendor
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handle1ClickDemoLogin('vendor')}
-                    className="w-full bg-amber-100 hover:bg-amber-200 text-amber-900 font-extrabold py-2 rounded-xl text-xs transition border border-amber-300 flex items-center justify-center gap-1.5"
-                  >
-                    <span>⚡ 1-Click Demo Login as Raju Fresh Veggies (Vendor)</span>
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* 3. TRANSPORTER LOGIN TAB */}
-            {loginRoleTab === 'transporter' && (
-              <form onSubmit={handleLoginSubmit} className="space-y-3.5">
-                <div className="bg-teal-50 border border-teal-200 p-3 rounded-2xl text-xs text-teal-900 space-y-1">
-                  <div className="font-extrabold flex items-center gap-1">
-                    <span>🚚 Transporter & Mini-Truck Partner Console</span>
-                  </div>
-                  <p className="text-[11px] text-teal-700">
-                    Access your assigned colony mini-truck manifest (DBMS View 2), payload meter, and delivery stops.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Driver Phone Number</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="e.g. 9876543210 (Ramesh Kumar)"
-                    value={loginForm.phone}
-                    onChange={(e) => setLoginForm({ ...loginForm, phone: e.target.value })}
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Mini-Truck Number (Tempo)</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. MH-02-AB-1234 (Tata Ace)"
-                    value={loginForm.truck_number}
-                    onChange={(e) => setLoginForm({ ...loginForm, truck_number: e.target.value })}
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Delivery Shift</label>
-                  <select
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option>Morning Shift (6:30 AM - 8:30 AM)</option>
-                    <option>Evening Shift (5:00 PM - 7:30 PM)</option>
-                  </select>
-                </div>
-
-                <div className="pt-2 space-y-2">
-                  <button
-                    type="submit"
-                    className="w-full bg-teal-700 hover:bg-teal-800 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-md transition"
-                  >
-                    Sign In as Transporter
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handle1ClickDemoLogin('transporter')}
-                    className="w-full bg-teal-100 hover:bg-teal-200 text-teal-900 font-extrabold py-2 rounded-xl text-xs transition border border-teal-300 flex items-center justify-center gap-1.5"
-                  >
-                    <span>⚡ 1-Click Demo Login as Ramesh Kumar (Mini-Truck Driver)</span>
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* 4. MASTER ADMIN LOGIN TAB */}
-            {loginRoleTab === 'admin' && (
-              <form onSubmit={handleLoginSubmit} className="space-y-3.5">
-                <div className="bg-slate-900 text-white p-3 rounded-2xl text-xs space-y-1">
-                  <div className="font-extrabold text-amber-400 flex items-center gap-1">
-                    <span>⚙️ Master Administrator Login</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300">
-                    Full DBMS SQL Query Studio, Produce Catalog CRUD, and System Superuser control.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Administrator Username</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="admin or aditya"
-                    value={loginForm.username}
-                    onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Admin Passcode</label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="Enter admin passcode (default: admin123)"
-                    value={loginForm.password}
-                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div className="pt-2 space-y-2">
-                  <button
-                    type="submit"
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-amber-400 font-extrabold py-2.5 rounded-xl text-xs shadow-md transition"
-                  >
-                    Authenticate as Master Admin
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handle1ClickDemoLogin('admin')}
-                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 font-extrabold py-2 rounded-xl text-xs transition border border-slate-300 flex items-center justify-center gap-1.5"
-                  >
-                    <span>⚡ 1-Click Demo Login as Master Admin (Aditya Sharma)</span>
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* 5. NEW USER REGISTRATION TAB */}
-            {loginRoleTab === 'register' && (
-              <form 
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  try {
-                    const res = await fetch('/api/register', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        name: loginForm.name,
-                        phone: loginForm.phone,
-                        society: loginForm.society,
-                        address: `${loginForm.society}`
-                      })
-                    });
-                    const data = await res.json();
-                    if (data.user) {
-                      setCurrentUser(data.user);
-                      localStorage.setItem('sabzimandi_user', JSON.stringify(data.user));
-                      setActiveRole('customer');
-                      setIsLoginModalOpen(false);
-                      setLoginSuccessNotice(`Welcome to SabziMandi Pro, ${data.user.name}!`);
-                    }
-                  } catch(err) {
-                    handle1ClickDemoLogin('customer');
-                  }
-                }} 
-                className="space-y-3.5"
-              >
-                <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl text-xs text-emerald-900 space-y-1">
-                  <div className="font-extrabold">✨ Create New Customer Account</div>
-                  <p className="text-[11px] text-emerald-700">
-                    Register with your society address to enjoy free colony mini-truck delivery!
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Rahul Sharma"
-                    value={loginForm.name}
-                    onChange={(e) => setLoginForm({ ...loginForm, name: e.target.value })}
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Mobile Phone Number</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="10-digit mobile number"
-                    value={loginForm.phone}
-                    onChange={(e) => setLoginForm({ ...loginForm, phone: e.target.value })}
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700">Colony / Society Name</label>
-                  <select
-                    value={loginForm.society}
-                    onChange={(e) => setLoginForm({ ...loginForm, society: e.target.value })}
-                    className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    {SOCIETIES.map(s => (
-                      <option key={s.name} value={s.name}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-md transition"
-                  >
-                    Create Account & Start Ordering
-                  </button>
-                </div>
-              </form>
-            )}
-
-          </div>
-        </div>
-      )}
 
       {/* 3. MAIN CONTENT CONTAINER BASED ON ACTIVE ROLE */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
@@ -1452,11 +1316,11 @@ function App() {
             <div className="bg-white rounded-3xl p-6 border border-slate-200">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-base font-extrabold text-slate-900">Live Mandi Stall Inventory (DBMS Table: Vendor_Inventory)</h2>
-                  <p className="text-xs text-slate-500">Update stock (kg) and today's mandi price per kg. Changes trigger instant database updates.</p>
+                  <h2 className="text-base font-extrabold text-slate-900">Live Mandi Stall Inventory</h2>
+                  <p className="text-xs text-slate-500">Update stock (kg) and today's mandi price per kg. Changes save to your stall instantly.</p>
                 </div>
                 <button 
-                  onClick={() => alert("All updated stock values have been saved to SQLite Vendor_Inventory!")}
+                  onClick={() => alert("All updated stock values have been saved.")}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-sm transition"
                 >
                   💾 Save All Changes
@@ -1676,18 +1540,13 @@ function App() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900">
-                    Logistics / Tempo Driver Manifest (DBMS Project View 2)
+                    Logistics / Tempo Driver Manifest
                   </h3>
                   <p className="text-xs text-slate-500">Manifest generated for truck driver Ramesh Kumar for tomorrow morning</p>
                 </div>
-                <span className="text-xs font-mono bg-slate-100 text-slate-800 px-3 py-1 rounded-lg border border-slate-200">
-                  SQL View: View 2 Manifest
+                <span className="text-xs bg-slate-100 text-slate-800 px-3 py-1 rounded-lg border border-slate-200">
+                  Morning Route
                 </span>
-              </div>
-
-              <div className="bg-slate-900 text-emerald-400 font-mono text-xs p-4 rounded-2xl mb-4 overflow-x-auto">
-                <div className="text-slate-400 mb-2">// SQL Query Implementation:</div>
-                <div>SELECT batch_id AS Tempo_ID, driver_name AS Driver, truck_number AS Truck, shift AS Delivery_Shift, current_load_kg AS Total_Weight_To_Deliver_Kg FROM Delivery_Batches WHERE batch_id = 1;</div>
               </div>
 
               <div className="overflow-x-auto">
@@ -1731,275 +1590,6 @@ function App() {
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* VIEW 4: ADMIN CONSOLE (FULL SYSTEM OWNER ACCESS) */}
-        {/* ========================================================= */}
-        {activeRole === 'admin' && (
-          <div className="space-y-6">
-            
-            {/* Admin Header */}
-            <div className="bg-slate-900 rounded-3xl p-6 text-white shadow-xl flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-400 text-black px-2.5 py-1 rounded-full">
-                  MASTER ADMIN CONTROL PANEL
-                </span>
-                <h1 className="text-2xl font-extrabold mt-2 text-white">
-                  Database & Quick Commerce Operations Controller
-                </h1>
-                <p className="text-xs text-slate-400 mt-1">
-                  Full control over Produce Catalog, Vendors, Mini-Truck Batches, and direct SQLite Query Execution.
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={async () => {
-                    if (confirm("Reset database to initial project seeds?")) {
-                      await fetch('/api/reset-db', { method: 'POST' });
-                      fetchProducts();
-                      fetchBatches();
-                      fetchOrders();
-                      alert("Database reset to seeds successfully!");
-                    }
-                  }}
-                  className="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 font-bold text-xs px-3.5 py-2 rounded-xl transition"
-                >
-                  🔄 Reset DB Seeds
-                </button>
-              </div>
-            </div>
-
-            {/* KPI Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                <div className="text-xs text-slate-400 font-semibold uppercase">Total Products</div>
-                <div className="text-2xl font-extrabold text-slate-900 mt-1">{products.length}</div>
-                <div className="text-[10px] text-emerald-600 font-bold mt-1">All Indian Market Items</div>
-              </div>
-              <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                <div className="text-xs text-slate-400 font-semibold uppercase">Active Orders</div>
-                <div className="text-2xl font-extrabold text-slate-900 mt-1">{orders.length}</div>
-                <div className="text-[10px] text-blue-600 font-bold mt-1">Batched for Tomorrow</div>
-              </div>
-              <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                <div className="text-xs text-slate-400 font-semibold uppercase">Mini-Truck Tempos</div>
-                <div className="text-2xl font-extrabold text-slate-900 mt-1">{batches.length || 3}</div>
-                <div className="text-[10px] text-amber-600 font-bold mt-1">Society Routes</div>
-              </div>
-              <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                <div className="text-xs text-slate-400 font-semibold uppercase">Active Mandis & Vendors</div>
-                <div className="text-2xl font-extrabold text-slate-900 mt-1">4</div>
-                <div className="text-[10px] text-emerald-600 font-bold mt-1">Vashi, Dadar & Andheri</div>
-              </div>
-            </div>
-
-            {/* Interactive SQL Query Studio (From Mini Project PDF!) */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-900">
-                    Interactive SQL Query Studio & DBMS Project Verification
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Run raw SQL against SQLite (Database: SabziMandi_Pro). Try the preloaded queries from your DBMS script!
-                  </p>
-                </div>
-              </div>
-
-              {/* Preloaded Query Buttons matching the PDF */}
-              <div className="flex flex-wrap gap-2 text-xs">
-                <button
-                  onClick={() => {
-                    const q = "SELECT c.full_name AS Customer, v.vendor_name AS Sold_By, p.item_name AS Item, oi.quantity_kg AS Qty, vi.price_per_kg AS Rate_Rs, oi.subtotal AS Item_Total, o.total_amount AS Grand_Total FROM Orders o JOIN Customers c ON o.customer_id = c.customer_id JOIN Order_Items oi ON o.order_id = oi.order_id JOIN Products p ON oi.product_id = p.product_id JOIN Vendor_Inventory vi ON p.product_id = vi.product_id AND o.vendor_id = vi.vendor_id JOIN Vendors v ON o.vendor_id = v.vendor_id;";
-                    setSqlQuery(q);
-                    handleExecuteSql(q);
-                  }}
-                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-3 py-1.5 rounded-lg transition"
-                >
-                  📄 Run View 1: Customer Bill Receipt
-                </button>
-
-                <button
-                  onClick={() => {
-                    const q = "SELECT batch_id AS Tempo_ID, driver_name AS Driver, truck_number AS Truck, shift AS Delivery_Shift, current_load_kg AS Total_Weight_To_Deliver_Kg FROM Delivery_Batches;";
-                    setSqlQuery(q);
-                    handleExecuteSql(q);
-                  }}
-                  className="bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-300 font-bold px-3 py-1.5 rounded-lg transition"
-                >
-                  🚚 Run View 2: Tempo Driver Manifest
-                </button>
-
-                <button
-                  onClick={() => {
-                    const q = "SELECT inventory_id, vendor_id, product_id, price_per_kg, stock_available_kg, last_updated FROM Vendor_Inventory WHERE vendor_id = 1 LIMIT 10;";
-                    setSqlQuery(q);
-                    handleExecuteSql(q);
-                  }}
-                  className="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold px-3 py-1.5 rounded-lg transition"
-                >
-                  📦 Check Trigger Stock Deductions
-                </button>
-
-                <button
-                  onClick={() => {
-                    const q = "SELECT product_id, item_name, category, hindi_name, unit FROM Products ORDER BY product_id ASC LIMIT 15;";
-                    setSqlQuery(q);
-                    handleExecuteSql(q);
-                  }}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-bold px-3 py-1.5 rounded-lg transition"
-                >
-                  🥦 Select Products Master Catalog
-                </button>
-              </div>
-
-              {/* SQL Input Area */}
-              <div className="relative">
-                <textarea
-                  value={sqlQuery}
-                  onChange={(e) => setSqlQuery(e.target.value)}
-                  rows={4}
-                  className="w-full font-mono text-xs bg-slate-900 text-emerald-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 border border-slate-800"
-                  placeholder="Enter custom SQL query (e.g. SELECT * FROM Products WHERE category = 'Fruit';)"
-                ></textarea>
-                <button
-                  onClick={() => handleExecuteSql()}
-                  disabled={isExecutingSql}
-                  className="absolute right-3 bottom-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl shadow transition flex items-center gap-2"
-                >
-                  {isExecutingSql ? "Executing..." : "▶ Execute Query"}
-                </button>
-              </div>
-
-              {/* SQL Result Table */}
-              {sqlError && (
-                <div className="bg-red-50 text-red-700 border border-red-200 p-3 rounded-xl text-xs font-mono">
-                  ❌ SQL Error: {sqlError}
-                </div>
-              )}
-
-              {sqlResult && (
-                <div className="border border-slate-200 rounded-2xl overflow-hidden mt-2">
-                  <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 flex justify-between items-center text-xs">
-                    <span className="font-bold text-slate-700">Query Result ({sqlResult.count || 0} rows)</span>
-                    <span className="text-slate-400 font-mono">Execution OK</span>
-                  </div>
-                  {sqlResult.columns ? (
-                    <div className="overflow-x-auto max-h-80">
-                      <table className="w-full text-left text-xs font-mono">
-                        <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
-                          <tr>
-                            {sqlResult.columns.map((col, idx) => (
-                              <th key={idx} className="py-2 px-3 font-semibold">{col}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {sqlResult.rows.map((row, rIdx) => (
-                            <tr key={rIdx} className="hover:bg-slate-50">
-                              {row.map((val, cIdx) => (
-                                <td key={cIdx} className="py-2 px-3 text-slate-800">{String(val)}</td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="p-4 text-xs font-semibold text-slate-700">
-                      {sqlResult.message || "Query executed."}
-                    </div>
-                  )}
-                </div>
-              )}
-
-            </div>
-
-            {/* Produce Catalog Management (CRUD) */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200">
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-900">Manage Fruit & Vegetable Catalog</h3>
-                  <p className="text-xs text-slate-500">Add new items or modify names and mandi rates</p>
-                </div>
-                <button
-                  onClick={async () => {
-                    const name = prompt("Enter English produce name (e.g. Avocado, Guava, Sweet Corn):");
-                    if (!name) return;
-                    const hindi = prompt("Enter Hindi name (e.g. एवोकैडो, अमरूद, भुट्टा):") || "";
-                    const category = prompt("Category (Vegetable or Fruit):", "Vegetable") || "Vegetable";
-                    const price = prompt("Price per kg (₹):", "60") || "60";
-                    
-                    await fetch('/api/products', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        item_name: name,
-                        hindi_name: hindi,
-                        category: category,
-                        price_per_kg: parseFloat(price),
-                        stock_kg: 50.0
-                      })
-                    });
-                    fetchProducts();
-                    alert(`Added ${name} to Master Catalog!`);
-                  }}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition shadow-sm"
-                >
-                  + Add New Produce
-                </button>
-              </div>
-
-              <div className="overflow-x-auto max-h-96">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 sticky top-0">
-                    <tr>
-                      <th className="py-2.5 px-3">ID</th>
-                      <th className="py-2.5 px-3">Item Name</th>
-                      <th className="py-2.5 px-3">Hindi Name</th>
-                      <th className="py-2.5 px-3">Category</th>
-                      <th className="py-2.5 px-3">Price (₹/kg)</th>
-                      <th className="py-2.5 px-3">Stock (kg)</th>
-                      <th className="py-2.5 px-3 text-right">Delete</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {products.map(p => (
-                      <tr key={p.product_id} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-3 font-mono text-slate-400">#{p.product_id}</td>
-                        <td className="py-2.5 px-3 font-bold text-slate-800">{p.item_name}</td>
-                        <td className="py-2.5 px-3 text-slate-600">{p.hindi_name}</td>
-                        <td className="py-2.5 px-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            p.category === 'Vegetable' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                          }`}>
-                            {p.category}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 font-bold text-slate-900">₹{p.price_per_kg || 40}</td>
-                        <td className="py-2.5 px-3 text-slate-600">{p.total_stock_kg || 50} kg</td>
-                        <td className="py-2.5 px-3 text-right">
-                          <button
-                            onClick={async () => {
-                              if (confirm(`Delete ${p.item_name}?`)) {
-                                await fetch(`/api/products/${p.product_id}`, { method: 'DELETE' });
-                                fetchProducts();
-                              }
-                            }}
-                            className="text-red-500 hover:text-red-700 font-bold px-2 py-1 rounded"
-                          >
-                            🗑
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             </div>
 
@@ -2449,7 +2039,7 @@ function App() {
           <div className="flex items-center gap-4 text-[11px]">
             <span>🌱 100% Mandi & Farm Fresh</span>
             <span>🚚 Zero Colony Traffic</span>
-            <span>⚡ React 18 & SQLite DDL/DML</span>
+            <span>⚡ Fresh produce, batched delivery</span>
           </div>
         </div>
       </footer>
